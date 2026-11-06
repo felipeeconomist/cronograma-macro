@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cronograma de Entregas</title>
+<meta name="description" content="Calendário de entregas da Equipe de Macroeconomia do Cepea.">
+<style>
+:root{
+  --bg:#f5f6f8; --surface:#fff; --text:#1b2430; --muted:#5b6978; --line:#e1e5eb;
+  --accent:#1d5fd0; --accent-ink:#fff; --weekend:#f2f4f7; --today:#e6efff; --out:#fafbfc;
+  --ok:#17794a; --warn:#b45309; --late:#b42318; --radius:10px;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.08);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0e131a; --surface:#161d27; --text:#e7ecf2; --muted:#9aa8b8; --line:#2a3441;
+    --accent:#6ea2ff; --accent-ink:#0e131a; --weekend:#121922; --today:#1b2b48; --out:#121820;
+    --ok:#4cc38a; --warn:#f0b04a; --late:#ff8a80;
+    --shadow:none;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);
+  font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 48px}
+header h1{margin:0;font-size:1.5rem;letter-spacing:-.01em}
+header p{margin:2px 0 0;color:var(--muted)}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.controls{margin:18px 0 14px;padding:12px 14px;display:grid;gap:12px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.row .lbl{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);min-width:64px}
+
+.pchip{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:999px;
+  border:1px solid var(--line);background:var(--surface)}
+.pchip i{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}
+.pchip:hover{border-color:var(--c)}
+.pchip[aria-pressed="true"]{background:color-mix(in srgb,var(--c) 18%,var(--surface));border-color:var(--c);font-weight:600}
+.pchip small{color:var(--muted);font-weight:400}
+
+.btn{padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.btn:hover{border-color:var(--accent)}
+.btn.link{border:0;background:none;color:var(--accent);padding:6px 4px}
+select{padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);max-width:100%}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:6px 14px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.spacer{flex:1}
+
+.nav{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.nav h2{margin:0 8px;font-size:1.25rem;min-width:11ch}.nav h2::first-letter{text-transform:uppercase}
+.nav .count{color:var(--muted);margin-left:auto}
+
+/* calendário */
+.cal{overflow:hidden}
+.dow,.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.dow div{padding:8px 6px;text-align:center;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--muted);border-bottom:1px solid var(--line);background:var(--weekend)}
+.cell{min-height:118px;padding:5px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+  display:flex;flex-direction:column;gap:3px;min-width:0;cursor:pointer}
+.cell:nth-child(7n){border-right:0}
+.cell.we{background:var(--weekend)}
+.cell.out{background:var(--out);opacity:.6}
+.cell.today{background:var(--today)}
+.cell .n{align-self:flex-start;min-width:26px;height:26px;border-radius:13px;display:grid;place-items:center;
+  font-size:.85rem;border:0;background:none;padding:0 6px}
+.cell.today .n{background:var(--accent);color:var(--accent-ink);font-weight:700}
+.chips{display:flex;flex-direction:column;gap:3px;min-width:0}
+.chip{display:flex;align-items:center;gap:5px;width:100%;text-align:left;border:0;border-left:3px solid var(--c);
+  border-radius:4px;padding:2px 6px;font-size:.78rem;line-height:1.3;
+  background:color-mix(in srgb,var(--c) 16%,var(--surface));min-width:0}
+.chip:hover{background:color-mix(in srgb,var(--c) 28%,var(--surface))}
+.chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip.done span{text-decoration:line-through;opacity:.7}
+.chip .mk{flex:none;font-size:.75rem}
+.more{border:0;background:none;color:var(--muted);font-size:.75rem;text-align:left;padding:1px 4px}
+.dots{display:none;gap:3px;flex-wrap:wrap;padding:0 2px}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+
+/* lista */
+.panel.list{padding:4px 0}
+.list h3{margin:0;padding:14px 16px 6px;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.item{display:grid;grid-template-columns:62px 1fr;gap:12px;padding:12px 16px;border-top:1px solid var(--line);cursor:pointer}
+.list h3+.item{border-top:0}
+.item:hover{background:var(--weekend)}
+.item.past{opacity:.72}
+.dt{text-align:center;border-radius:8px;padding:4px 0;background:color-mix(in srgb,var(--c) 14%,var(--surface));
+  border-top:3px solid var(--c);align-self:start}
+.dt b{display:block;font-size:1.3rem;line-height:1.1}
+.dt span{font-size:.72rem;text-transform:uppercase;color:var(--muted)}
+.item .top{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.item .tt{font-weight:600}
+.item .sc{margin:4px 0 6px;color:var(--text)}
+.tags{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;padding:2px 9px;border-radius:999px;
+  background:color-mix(in srgb,var(--c,var(--muted)) 16%,var(--surface));border:1px solid color-mix(in srgb,var(--c,var(--muted)) 40%,var(--line))}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.who{font-size:.8rem;color:var(--muted)}
+.st{font-size:.75rem;font-weight:600;padding:2px 8px;border-radius:6px;border:1px solid currentColor}
+.st.entregue{color:var(--ok)} .st.em-andamento{color:var(--warn)} .st.planejado{color:var(--muted)} .st.atrasado{color:var(--late)}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+.sect{margin-top:22px}
+.sect>h2{font-size:1.1rem;margin:0 0 10px}
+.chk{display:flex;gap:8px;align-items:center;color:var(--muted);margin:0 0 10px}
+
+/* diálogo */
+dialog{width:min(560px,calc(100vw - 24px));max-height:calc(100vh - 32px);border:1px solid var(--line);border-radius:14px;
+  padding:0;background:var(--surface);color:var(--text);box-shadow:0 20px 50px rgba(0,0,0,.3)}
+dialog::backdrop{background:rgba(10,15,22,.55)}
+.dhead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface)}
+.dhead h2{margin:0;font-size:1.05rem}.dhead h2::first-letter{text-transform:uppercase}
+.dbody .item{cursor:default;grid-template-columns:1fr;border-top:1px solid var(--line)}
+.dbody .item:first-child{border-top:0}
+.dbody .item:hover{background:none}
+.dbody .item .dt{display:none}
+.dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:8px 0 0;font-size:.9rem}
+.dl dt{color:var(--muted)} .dl dd{margin:0}
+.err{margin:40px auto;max-width:560px;padding:16px;border:1px solid var(--late);border-radius:var(--radius);background:var(--surface)}
+footer{margin-top:28px;color:var(--muted);font-size:.8rem}
+
+@media (max-width:720px){
+  .cell{min-height:58px;padding:3px}
+  .chips{display:none}
+  .dots{display:flex}
+  .cell .n{min-width:24px;height:24px;font-size:.8rem}
+  .dow div{padding:6px 0;font-size:.68rem}
+  .row .lbl{min-width:100%}
+  .nav .count{margin-left:0;width:100%}
+  .item{grid-template-columns:52px 1fr;padding:12px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="titulo">Cronograma de Entregas</h1>
+    <p id="subtitulo"></p>
+  </header>
+  <main id="app" aria-live="polite">
+    <p class="empty">Carregando…</p>
+  </main>
+  <footer id="rodape"></footer>
+</div>
+
+<dialog id="dlg" aria-labelledby="dlg-t">
+  <div class="dhead"><h2 id="dlg-t"></h2><button class="btn" id="dlg-x" aria-label="Fechar">Fechar</button></div>
+  <div class="dbody" id="dlg-b"></div>
+</dialog>
+
+<script src="config.js"></script>
+<script>
+(() => {
+'use strict';
+
+const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const DIAS  = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const DIAS_LONGO = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+const STATUS = { 'planejado':'Planejado', 'em-andamento':'Em andamento', 'entregue':'Entregue', 'atrasado':'Atrasado' };
+const FREQ = { semanal:'toda semana', quinzenal:'a cada 2 semanas', mensal:'todo mês', bimestral:'a cada 2 meses',
+               trimestral:'a cada 3 meses', semestral:'a cada 6 meses', anual:'todo ano' };
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2,'0');
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parse = s => { const [y,m,d] = String(s).split('-').map(Number); return new Date(y, m-1, d); };
+const daysIn = (y,m) => new Date(y, m+1, 0).getDate();
+
+let DATA, PROJ = {}, PESSOA = {}, EVENTS = [], BYKEY = {};
+const HOJE = iso(new Date());
+const state = { mes: null, projetos: new Set(), pessoa: '', vista: 'calendario', passadas: false };
+
+/* ---------- dados ---------- */
+function addMonths(base, i){
+  const t = base.getMonth() + i, y = base.getFullYear() + Math.floor(t/12), m = ((t%12)+12)%12;
+  return new Date(y, m, Math.min(base.getDate(), daysIn(y,m)));
+}
+function nth(start, freq, i){
+  switch(freq){
+    case 'semanal':   return new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7*i);
+    case 'quinzenal': return new Date(start.getFullYear(), start.getMonth(), start.getDate() + 14*i);
+    case 'mensal':    return addMonths(start, i);
+    case 'bimestral': return addMonths(start, 2*i);
+    case 'trimestral':return addMonths(start, 3*i);
+    case 'semestral': return addMonths(start, 6*i);
+    case 'anual':     return addMonths(start, 12*i);
+    default: throw new Error(`Frequência desconhecida: "${freq}"`);
+  }
+}
+function expand(data){
+  const out = [];
+  data.entregas.forEach((e, idx) => {
+    const start = parse(e.data);
+    const datas = [];
+    if (e.repete){
+      const end = e.repete.ate ? parse(e.repete.ate) : addMonths(start, 24);
+      for (let i = 0; i < 1000; i++){ const d = nth(start, e.repete.frequencia, i); if (d > end) break; datas.push(d); }
+    } else datas.push(start);
+
+    datas.forEach(d => {
+      const orig = iso(d);
+      const aj = (e.ajustes && e.ajustes[orig]) || {};
+      if (aj.cancelado) return;
+      const f = { ...e, ...aj };
+      const dia = parse(f.data && aj.data ? aj.data : orig);
+      const key = `${idx}@${orig}`;
+      const ev = {
+        key, projeto: f.projeto, titulo: f.titulo || (PROJ[f.projeto]?.nome ?? f.projeto),
+        iso: iso(dia), data: dia, escopo: f.escopo || '', responsaveis: f.responsaveis || [],
+        status: f.status || 'planejado', link: f.link || '',
+        repete: e.repete ? e.repete.frequencia : null
+      };
+      out.push(ev);
+    });
+  });
+  out.sort((a,b) => a.iso.localeCompare(b.iso) || (PROJ[a.projeto]?.nome ?? '').localeCompare(PROJ[b.projeto]?.nome ?? ''));
+  return out;
+}
+const statusReal = ev => (ev.iso < HOJE && ev.status !== 'entregue') ? 'atrasado' : ev.status;
+const nomePessoa = id => PESSOA[id]?.nome ?? id;
+const corDe = ev => PROJ[ev.projeto]?.cor ?? '#667085';
+const nomeProj = ev => PROJ[ev.projeto]?.nome ?? ev.projeto;
+
+function filtrados(){
+  return EVENTS.filter(ev =>
+    (state.projetos.size === 0 || state.projetos.has(ev.projeto)) &&
+    (!state.pessoa || ev.responsaveis.includes(state.pessoa)));
+}
+
+/* ---------- estado na URL (permite compartilhar um filtro) ---------- */
+function lerHash(){
+  const p = new URLSearchParams(location.hash.slice(1));
+  const m = /^(\d{4})-(\d{2})$/.exec(p.get('mes') || '');
+  state.mes = m ? new Date(+m[1], +m[2]-1, 1) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  state.projetos = new Set((p.get('projeto') || '').split(',').filter(id => PROJ[id]));
+  state.pessoa = PESSOA[p.get('pessoa')] ? p.get('pessoa') : '';
+  state.vista = p.get('vista') === 'lista' ? 'lista' : 'calendario';
+  state.passadas = p.get('passadas') === '1';
+}
+function gravarHash(){
+  const p = new URLSearchParams();
+  p.set('mes', `${state.mes.getFullYear()}-${pad(state.mes.getMonth()+1)}`);
+  if (state.projetos.size) p.set('projeto', [...state.projetos].join(','));
+  if (state.pessoa) p.set('pessoa', state.pessoa);
+  if (state.vista !== 'calendario') p.set('vista', state.vista);
+  if (state.passadas) p.set('passadas', '1');
+  history.replaceState(null, '', '#' + p.toString().replace(/%2C/g, ','));
+}
+
+/* ---------- renderização ---------- */
+function pillProj(ev){ return `<span class="pill" style="--c:${esc(corDe(ev))}"><i></i>${esc(nomeProj(ev))}</span>`; }
+function stBadge(ev){ const s = statusReal(ev); return `<span class="st ${s}">${STATUS[s] ?? esc(s)}</span>`; }
+function quem(ev){
+  return ev.responsaveis.length
+    ? `<span class="who">Responsáveis: <b>${ev.responsaveis.map(r => esc(nomePessoa(r))).join(', ')}</b></span>`
+    : `<span class="who">Responsável não definido</span>`;
+}
+
+function itemHTML(ev, {detalhe=false} = {}){
+  const d = ev.data;
+  const past = ev.iso < HOJE && ev.status === 'entregue' ? ' past' : '';
+  return `<div class="item${past}" data-ev="${esc(ev.key)}" style="--c:${esc(corDe(ev))}" tabindex="0" role="button">
+    <div class="dt"><b>${d.getDate()}</b><span>${DIAS[d.getDay()]} · ${MESES[d.getMonth()].slice(0,3)}</span></div>
+    <div>
+      <div class="top">${pillProj(ev)}<span class="tt">${esc(ev.titulo)}</span>${stBadge(ev)}</div>
+      ${ev.escopo ? `<div class="sc"><b>Escopo:</b> ${esc(ev.escopo)}</div>` : ''}
+      <div class="tags">${quem(ev)}</div>
+      ${detalhe ? `<dl class="dl"><dt>Data</dt><dd>${DIAS_LONGO[d.getDay()]}, ${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}</dd>
+        ${ev.repete ? `<dt>Recorrência</dt><dd>${FREQ[ev.repete] ?? esc(ev.repete)}</dd>` : ''}
+        ${ev.link ? `<dt>Link</dt><dd><a href="${esc(ev.link)}" target="_blank" rel="noopener">${esc(ev.link)}</a></dd>` : ''}</dl>` : ''}
+    </div>
+  </div>`;
+}
+
+function listaHTML(evs){
+  if (!evs.length) return `<div class="empty">Nenhuma entrega encontrada.</div>`;
+  let html = '', cur = '';
+  evs.forEach(ev => {
+    const k = ev.iso.slice(0,7);
+    if (k !== cur){ cur = k; html += `<h3>${MESES[ev.data.getMonth()]} de ${ev.data.getFullYear()}</h3>`; }
+    html += itemHTML(ev);
+  });
+  return html;
+}
+
+function controlesHTML(){
+  const cont = {}; EVENTS.forEach(e => cont[e.projeto] = (cont[e.projeto]||0) + 1);
+  const grupo = (tipo, rotulo) => {
+    const ps = DATA.projetos.filter(p => (p.tipo || 'produto') === tipo);
+    if (!ps.length) return '';
+    return `<div class="row"><span class="lbl">${rotulo}</span>${ps.map(p =>
+      `<button class="pchip" data-proj="${esc(p.id)}" style="--c:${esc(p.cor)}" aria-pressed="${state.projetos.has(p.id)}"><i></i>${esc(p.nome)}</button>`).join('')}</div>`;
+  };
+  return `${grupo('produto','Produtos')}${grupo('projeto','Projetos')}
+    <div class="row">
+      <span class="lbl">Pessoa</span>
+      <select id="f-pessoa" aria-label="Filtrar por responsável">
+        <option value="">Todos os responsáveis</option>
+        ${DATA.pessoas.map(p => `<option value="${esc(p.id)}"${state.pessoa===p.id?' selected':''}>${esc(p.nome)}</option>`).join('')}
+      </select>
+      ${(state.projetos.size || state.pessoa) ? `<button class="btn link" id="limpar">Limpar filtros</button>` : ''}
+      <span class="spacer"></span>
+      <div class="seg" role="group" aria-label="Modo de visualização">
+        <button data-vista="calendario" aria-pressed="${state.vista==='calendario'}">Calendário</button>
+        <button data-vista="lista" aria-pressed="${state.vista==='lista'}">Lista</button>
+      </div>
+    </div>`;
+}
+
+function calendarioHTML(evs){
+  const y = state.mes.getFullYear(), m = state.mes.getMonth();
+  const semana = DATA.semanaComecaNa === 1 ? 1 : 0;
+  const offset = (new Date(y,m,1).getDay() - semana + 7) % 7;
+  const semanas = Math.ceil((offset + daysIn(y,m)) / 7);
+  const porDia = {}; evs.forEach(e => (porDia[e.iso] ||= []).push(e));
+
+  let dow = '';
+  for (let i = 0; i < 7; i++) dow += `<div>${DIAS[(i+semana)%7]}</div>`;
+
+  let cells = '';
+  for (let i = 0; i < semanas*7; i++){
+    const d = new Date(y, m, 1 - offset + i), k = iso(d);
+    const lista = porDia[k] || [];
+    const cls = ['cell', d.getMonth()!==m && 'out', (d.getDay()===0||d.getDay()===6) && 'we', k===HOJE && 'today'].filter(Boolean).join(' ');
+    const MAX = 3;
+    const chips = lista.slice(0,MAX).map(ev => {
+      const tip = `${ev.titulo}\n${ev.escopo ? 'Escopo: '+ev.escopo+'\n' : ''}Responsáveis: ${ev.responsaveis.map(nomePessoa).join(', ') || '—'}`;
+      return `<button class="chip${ev.status==='entregue'?' done':''}" data-ev="${esc(ev.key)}" style="--c:${esc(corDe(ev))}" title="${esc(tip)}">
+        ${ev.status==='entregue' ? '<b class="mk">✓</b>' : (statusReal(ev)==='atrasado' ? '<b class="mk" style="color:var(--late)">!</b>' : '')}<span>${esc(nomeProj(ev))}</span></button>`;
+    }).join('');
+    const mais = lista.length > MAX ? `<button class="more" data-dia="${k}">+${lista.length-MAX} mais</button>` : '';
+    const dots = lista.map(ev => `<i style="--c:${esc(corDe(ev))}"></i>`).join('');
+    cells += `<div class="${cls}" data-dia="${k}"><button class="n" data-dia="${k}" aria-label="${d.getDate()} de ${MESES[d.getMonth()]}${lista.length ? ', '+lista.length+' entrega(s)' : ''}">${d.getDate()}</button>
+      <div class="chips">${chips}${mais}</div><div class="dots">${dots}</div></div>`;
+  }
+  return `<div class="panel cal"><div class="dow">${dow}</div><div class="grid">${cells}</div></div>`;
+}
+
+function render(){
+  const evs = filtrados();
+  const y = state.mes.getFullYear(), m = state.mes.getMonth();
+  let corpo = '';
+
+  if (state.vista === 'calendario'){
+    const doMes = evs.filter(e => e.data.getFullYear()===y && e.data.getMonth()===m);
+    corpo += `<div class="nav">
+      <button class="btn" data-nav="-1" aria-label="Mês anterior">‹</button>
+      <h2>${MESES[m]} ${y}</h2>
+      <button class="btn" data-nav="1" aria-label="Próximo mês">›</button>
+      <button class="btn" data-nav="0">Hoje</button>
+      <span class="count">${doMes.length} ${doMes.length===1?'entrega':'entregas'} no mês</span>
+    </div>${calendarioHTML(evs)}`;
+    if (state.projetos.size){
+      const nomes = [...state.projetos].map(id => PROJ[id].nome).join(', ');
+      corpo += `<section class="sect"><h2>Todas as entregas programadas — ${esc(nomes)}</h2>
+        <div class="panel list">${listaHTML(evs)}</div></section>`;
+    }
+  } else {
+    const vis = state.passadas ? evs : evs.filter(e => e.iso >= HOJE || e.status !== 'entregue' && e.iso < HOJE);
+    corpo += `<label class="chk"><input type="checkbox" id="passadas"${state.passadas?' checked':''}> Mostrar também entregas já concluídas</label>
+      <div class="panel list">${listaHTML(vis)}</div>`;
+  }
+
+  $('#app').innerHTML = `${avisosHTML()}<section class="panel controls" aria-label="Filtros">${controlesHTML()}</section>${corpo}`;
+  gravarHash();
+}
+
+/* ---------- diálogo ---------- */
+const dlg = document.getElementById('dlg');
+function abrirDialogo(titulo, evs){
+  document.getElementById('dlg-t').textContent = titulo;
+  document.getElementById('dlg-b').innerHTML = evs.map(e => itemHTML(e, {detalhe:true})).join('');
+  if (!dlg.open) dlg.showModal();
+}
+document.getElementById('dlg-x').onclick = () => dlg.close();
+dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+
+/* ---------- eventos ---------- */
+const $ = s => document.querySelector(s);
+document.addEventListener('click', e => {
+  if (dlg.contains(e.target) && e.target.closest('[data-ev]') && dlg.open) return;
+  const t = e.target;
+  const proj = t.closest('[data-proj]');
+  if (proj){ const id = proj.dataset.proj; state.projetos.has(id) ? state.projetos.delete(id) : state.projetos.add(id); return render(); }
+  if (t.closest('#limpar')){ state.projetos.clear(); state.pessoa = ''; return render(); }
+  const v = t.closest('[data-vista]');
+  if (v){ state.vista = v.dataset.vista; return render(); }
+  const nav = t.closest('[data-nav]');
+  if (nav){
+    const n = +nav.dataset.nav, h = new Date();
+    state.mes = n === 0 ? new Date(h.getFullYear(), h.getMonth(), 1) : new Date(state.mes.getFullYear(), state.mes.getMonth()+n, 1);
+    return render();
+  }
+  const ev = t.closest('[data-ev]');
+  if (ev){ const x = BYKEY[ev.dataset.ev]; if (x) abrirDialogo(`${DIAS_LONGO[x.data.getDay()]}, ${x.data.getDate()} de ${MESES[x.data.getMonth()]}`, [x]); return; }
+  const dia = t.closest('[data-dia]');
+  if (dia){
+    const k = dia.dataset.dia, lista = filtrados().filter(x => x.iso === k);
+    if (lista.length){ const d = parse(k); abrirDialogo(`${DIAS_LONGO[d.getDay()]}, ${d.getDate()} de ${MESES[d.getMonth()]}`, lista); }
+  }
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'f-pessoa'){ state.pessoa = e.target.value; render(); }
+  if (e.target.id === 'passadas'){ state.passadas = e.target.checked; render(); }
+});
+document.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.item[data-ev]')){ e.preventDefault(); e.target.click(); }
+});
+window.addEventListener('hashchange', () => { if (DATA){ lerHash(); render(); } });
+
+/* ---------- leitura da planilha (Google Planilhas publicada como CSV) ---------- */
+const CFG = Object.assign({ titulo:'Cronograma de Entregas', subtitulo:'', semanaComecaNa:0, planilhaCsv:'' }, window.CONFIG || {});
+const PALETA = ['#2f6fdb','#1b8a5a','#d9822b','#8a4fd1','#c8456b','#0f9fb5','#9a7b0a','#6b7280'];
+let AVISOS = [];
+const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+const slug = s => norm(s).replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+
+function csvParse(t){
+  t = t.replace(/^﻿/, '');
+  const prim = t.split(/\r?\n/, 1)[0];
+  const sep = (prim.split(';').length > prim.split(',').length) ? ';' : ',';
+  const rows = []; let row = [], f = '', q = false;
+  for (let i = 0; i < t.length; i++){
+    const c = t[i];
+    if (q){ if (c === '"'){ if (t[i+1] === '"'){ f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true;
+    else if (c === sep){ row.push(f); f = ''; }
+    else if (c === '\n'){ row.push(f); rows.push(row); row = []; f = ''; }
+    else if (c !== '\r') f += c;
+  }
+  if (f !== '' || row.length){ row.push(f); rows.push(row); }
+  return rows;
+}
+function parseData(v){
+  v = String(v ?? '').trim();
+  let m = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/.exec(v), y, mo, d;
+  if (m){ d = +m[1]; mo = +m[2]; y = +m[3]; if (y < 100) y += 2000; }
+  else if ((m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v))){ y = +m[1]; mo = +m[2]; d = +m[3]; }
+  else return null;
+  const dt = new Date(y, mo-1, d);
+  return (dt.getFullYear() === y && dt.getMonth() === mo-1 && dt.getDate() === d) ? iso(dt) : null;
+}
+function dadosDaPlanilha(texto){
+  const rows = csvParse(texto).filter(r => r.some(c => c.trim()));
+  if (!rows.length) throw new Error('A planilha está vazia.');
+  const head = rows.shift().map(norm);
+  const col = (...ns) => head.findIndex(h => ns.some(n => h === n || h.startsWith(n)));
+  const iP = col('produto','projeto'), iT = col('tipo'), iD = col('data'), iE = col('entrega','titulo'),
+        iS = col('escopo'), iR = col('responsave'), iSt = col('status'), iL = col('link'), iC = col('cor');
+  if (iP < 0 || iD < 0)
+    throw new Error('Não encontrei as colunas "Produto/Projeto" e "Data" na primeira linha da planilha.');
+  const get = (r, i) => i >= 0 ? (r[i] ?? '').trim() : '';
+
+  AVISOS = [];
+  const projetos = new Map(), pessoas = new Map(), entregas = [];
+  rows.forEach((r, n) => {
+    const linha = n + 2, nome = get(r, iP);
+    if (!nome && !get(r, iD)) return;
+    if (!nome){ AVISOS.push(`Linha ${linha}: falta o produto/projeto.`); return; }
+    const data = parseData(get(r, iD));
+    if (!data){ AVISOS.push(`Linha ${linha} (${nome}): data inválida "${get(r, iD)}". Use dd/mm/aaaa.`); return; }
+    const st = norm(get(r, iSt));
+    if (st.startsWith('cancel')) return;
+
+    const id = slug(nome);
+    if (!projetos.has(id)){
+      const cor = get(r, iC);
+      projetos.set(id, { id, nome,
+        tipo: norm(get(r, iT)).startsWith('proj') ? 'projeto' : 'produto',
+        cor: /^#[0-9a-f]{6}$/i.test(cor) ? cor : PALETA[projetos.size % PALETA.length] });
+    }
+    const resp = get(r, iR).split(/\s*[,;\/]\s*|\s+e\s+/i).map(x => x.trim()).filter(Boolean).map(x => {
+      const pid = slug(x); if (!pessoas.has(pid)) pessoas.set(pid, { id: pid, nome: x }); return pid;
+    });
+    entregas.push({
+      projeto: id, titulo: get(r, iE) || nome, data, escopo: get(r, iS), responsaveis: resp,
+      status: st.includes('andamento') ? 'em-andamento' : /entreg|conclu|public/.test(st) ? 'entregue' : 'planejado',
+      link: get(r, iL)
+    });
+  });
+  return { titulo: CFG.titulo, subtitulo: CFG.subtitulo, semanaComecaNa: CFG.semanaComecaNa,
+           projetos: [...projetos.values()],
+           pessoas: [...pessoas.values()].sort((a,b) => a.nome.localeCompare(b.nome, 'pt-BR')),
+           entregas };
+}
+async function carregar(){
+  if (CFG.planilhaCsv){
+    const r = await fetch(CFG.planilhaCsv, { cache: 'no-cache' });
+    if (!r.ok) throw new Error(`Não foi possível ler a planilha (HTTP ${r.status}). Confira se ela está publicada na web.`);
+    return dadosDaPlanilha(await r.text());
+  }
+  const r = await fetch('data.json', { cache: 'no-cache' });
+  if (!r.ok) throw new Error(`Não foi possível carregar data.json (HTTP ${r.status}).`);
+  const d = await r.json();
+  d.titulo ||= CFG.titulo; d.subtitulo ||= CFG.subtitulo;
+  return d;
+}
+function avisosHTML(){
+  return AVISOS.length
+    ? `<div class="panel" style="padding:10px 14px;margin-bottom:12px;color:var(--warn)"><b>${AVISOS.length} linha(s) da planilha foram ignoradas:</b><ul style="margin:6px 0 0;padding-left:18px">${AVISOS.slice(0,8).map(a => `<li>${esc(a)}</li>`).join('')}</ul></div>` : '';
+}
+
+/* ---------- início ---------- */
+(async function init(){
+  try {
+    DATA = await carregar();
+    DATA.projetos.forEach(p => PROJ[p.id] = p);
+    DATA.pessoas.forEach(p => PESSOA[p.id] = p);
+    document.getElementById('titulo').textContent = DATA.titulo || 'Cronograma de Entregas';
+    document.title = DATA.titulo || document.title;
+    document.getElementById('subtitulo').textContent = DATA.subtitulo || '';
+    EVENTS = expand(DATA);
+    EVENTS.forEach(e => BYKEY[e.key] = e);
+    lerHash();
+    render();
+  } catch (err){
+    document.getElementById('app').innerHTML =
+      `<div class="err"><b>Erro ao carregar os dados</b><p>${esc(err.message)}</p>
+       <p>Confira o link em <code>config.js</code> e se a planilha está publicada na web (Arquivo → Compartilhar → Publicar na web → CSV).
+       Se abriu o <code>index.html</code> direto do computador, use um servidor local (veja o README).</p></div>`;
+  }
+})();
+})();
+</script>
+</body>
+</html>

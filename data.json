@@ -1,0 +1,134 @@
+{
+  "titulo": "Cronograma de Entregas",
+  "subtitulo": "Equipe de Macroeconomia · Cepea",
+  "semanaComecaNa": 0,
+  "projetos": [
+    {
+      "id": "pib-agro",
+      "nome": "PIB do Agronegócio",
+      "tipo": "produto",
+      "cor": "#2f6fdb"
+    },
+    {
+      "id": "mercado-trabalho",
+      "nome": "Mercado de Trabalho do Agronegócio",
+      "tipo": "produto",
+      "cor": "#1b8a5a"
+    },
+    {
+      "id": "ippa",
+      "nome": "IPPA",
+      "tipo": "produto",
+      "cor": "#d9822b"
+    },
+    {
+      "id": "produto-4",
+      "nome": "Produto 4 (a definir)",
+      "tipo": "produto",
+      "cor": "#8a4fd1"
+    },
+    {
+      "id": "projeto-x",
+      "nome": "Projeto temporário (exemplo)",
+      "tipo": "projeto",
+      "cor": "#c8456b"
+    }
+  ],
+  "pessoas": [
+    {
+      "id": "felipe",
+      "nome": "Felipe"
+    },
+    {
+      "id": "gabriel",
+      "nome": "Gabriel"
+    },
+    {
+      "id": "adriana",
+      "nome": "Adriana"
+    }
+  ],
+  "entregas": [
+    {
+      "projeto": "pib-agro",
+      "titulo": "Divulgação trimestral — PIB do Agronegócio",
+      "data": "2026-12-18",
+      "repete": {
+        "frequencia": "trimestral",
+        "ate": "2027-12-31"
+      },
+      "escopo": "Escopo de exemplo: atualização das estimativas e texto de análise do trimestre.",
+      "responsaveis": [
+        "felipe",
+        "gabriel"
+      ],
+      "status": "planejado"
+    },
+    {
+      "projeto": "mercado-trabalho",
+      "titulo": "Divulgação trimestral — Mercado de Trabalho do Agronegócio",
+      "data": "2026-11-27",
+      "repete": {
+        "frequencia": "trimestral",
+        "ate": "2027-12-31"
+      },
+      "escopo": "Escopo de exemplo: atualização dos indicadores e texto de análise do trimestre.",
+      "responsaveis": [
+        "felipe",
+        "gabriel"
+      ],
+      "status": "planejado"
+    },
+    {
+      "projeto": "ippa",
+      "titulo": "Divulgação trimestral — IPPA",
+      "data": "2026-11-13",
+      "repete": {
+        "frequencia": "trimestral",
+        "ate": "2027-12-31"
+      },
+      "escopo": "Escopo de exemplo: atualização do índice e nota metodológica.",
+      "responsaveis": [
+        "adriana"
+      ],
+      "status": "planejado"
+    },
+    {
+      "projeto": "produto-4",
+      "titulo": "Entrega trimestral — Produto 4",
+      "data": "2026-12-10",
+      "repete": {
+        "frequencia": "trimestral",
+        "ate": "2027-12-31"
+      },
+      "escopo": "Escopo de exemplo.",
+      "responsaveis": [],
+      "status": "planejado"
+    },
+    {
+      "projeto": "projeto-x",
+      "titulo": "Entrega parcial 1 — base de dados",
+      "data": "2026-11-25",
+      "escopo": "Base de dados estruturada e nota técnica com a metodologia.",
+      "responsaveis": [],
+      "status": "em-andamento"
+    },
+    {
+      "projeto": "projeto-x",
+      "titulo": "Entrega parcial 2 — resultados preliminares",
+      "data": "2026-12-18",
+      "escopo": "Primeiros resultados e validação interna.",
+      "responsaveis": [],
+      "status": "planejado"
+    },
+    {
+      "projeto": "projeto-x",
+      "titulo": "Relatório final",
+      "data": "2027-01-29",
+      "escopo": "Relatório final e apresentação para o demandante.",
+      "responsaveis": [],
+      "status": "planejado",
+      "link": ""
+    }
+  ]
+}
