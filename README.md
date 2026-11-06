@@ -48,6 +48,21 @@ Se alguma linha tiver problema (ex.: data inválida), o site avisa no topo e ign
 
 Atualize só a planilha. O site mostra as mudanças em poucos minutos (o Google atualiza o CSV publicado a cada ~5 min). Não precisa mexer no GitHub.
 
+## Notificações por e-mail (opcional)
+
+O arquivo `notificacoes.gs` faz a planilha avisar cada pessoa por e-mail:
+- **Resumo mensal**: no dia 1 de cada mês, a lista das entregas da pessoa naquele mês.
+- **Lembrete**: todo dia, avisa quem tem entrega daqui a 3 dias (e ainda não está `Entregue`).
+
+Para ligar:
+1. Na planilha, crie uma aba **Pessoas** com duas colunas: `Nome` e `E-mail`. Os nomes devem ser iguais aos usados na coluna Responsáveis. **Não publique essa aba na web** (ela tem e-mails).
+2. Na planilha, abra **Extensões → Apps Script**, apague o conteúdo e cole o conteúdo de `notificacoes.gs`. Salve.
+3. Escolha `testeResumoMensal` na lista de funções e clique em **Executar**. Autorize o acesso quando pedir. Os e-mails de teste chegam só para você, sem avisar ninguém.
+4. Se estiver tudo certo, execute `configurarGatilhos` uma vez. Isso agenda os envios automáticos (8h).
+
+Ajustes (dias de antecedência, hora, remetente) ficam no bloco `CONFIG` no início do arquivo.
+Os e-mails saem da conta Google de quem autorizou o script.
+
 ## Testar no computador
 
 Abrir o `index.html` com duplo clique não funciona. Use:
